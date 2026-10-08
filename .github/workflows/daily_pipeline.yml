@@ -1,0 +1,29 @@
+name: S&P 500 Daily Pipeline
+
+on:
+  schedule:
+    - cron: '0 21 * * 1-5'   # 9pm UTC = 5pm ET, Mon–Fri (after market close)
+  workflow_dispatch:           # allows manual trigger from GitHub UI
+
+jobs:
+  fetch-and-store:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas pyarrow boto3
+
+      - name: Run pipeline
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          S3_BUCKET:             harsha-job-market-pipeline
+        run: python fetch_sp500.py
